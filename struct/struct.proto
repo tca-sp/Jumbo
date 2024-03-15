@@ -1,0 +1,227 @@
+syntax = "proto3";   
+package struct;
+//protoc --go_out=. *.proto
+option go_package = "./";
+message TX{
+    bytes Payload=1;
+}
+
+message TXs{
+    //int64 Timestamp=1;
+    repeated bytes Txs=2;
+}
+
+message TxPool{
+    string ChannelID=1;
+    bool IsConfig=2;
+    bytes Payloads=3;
+}
+
+//uni struct for broadcast
+message BCMsg{
+    int32 Type=1; //1: BCBlock; 2: Payback; 3: CallHelp; 4: Help(similar to BCBlock)
+    bytes Content=2;
+}
+
+//msg struct for broadcast leader to follower
+message BCBlock{
+    RawBC RawBC=1;
+    bytes Payload=2;
+    Signature Sign=3;
+    BatchSignature BatchSigns=4;
+}
+
+message RBCMsg{
+    int32 ID=1;
+    int32 Leader=2;
+    int32 K=3;
+    int32 Round=4;
+    int32 Type=5; //1 for ready 2 for echo
+    int32 Msglen=6;
+    bytes Root=7;//store root
+    repeated bytes Values=8;//store path
+    Signature Sign=9;
+    BatchSignature SS=10;//used when bound memory 
+}
+
+message WRBCMsg{
+    int32 ID=1;
+    int32 Leader=2;
+    int32 K=3;
+    int32 Round=4;
+    int32 Type=5; //1 for ready 2 for echo
+    bytes Content=6;//store root
+    bytes Value=7;
+    Signature Sign=8;//used when bound memory 
+    BatchSignature SS=9;//used when bound memory 
+}
+
+message BatchSignature{
+    bytes Signs=1;
+    repeated int32 mems=2;
+}
+
+message RawBC{
+    bytes Lastblkid=1;
+    int32 Height=2;
+    bytes Root=3;
+    int32 Leader=4;
+    int32 K=5;
+    int64 Timestamp=6;
+    int32 Txcount=7;
+}
+
+//msg struct for broadcast follower to leader
+message PayBack{
+    int32 Round=1;
+    bytes BlkID=2;
+    Signature Sign=3;
+    int32 ID=4;
+}
+
+//msg for broadcast call help 
+message CallHelp{
+    int32 Round=1;
+    int32 ID=2;
+    int32 Leader=3;
+    int32 K=4;
+}
+
+//msg for order call help
+message CallHelpOrder{
+    int32 Round=1;
+    int32 ID=2;
+    repeated MissBlock MissBlocks=3;
+}
+
+message MissBlock{
+    int32 Lid=1;
+    int32 Sid=2;
+    repeated int32 MissHeights=3; //index of missing blocks
+}
+
+message Block{
+    RawBlock Rawblk=1;
+    bytes Payloads=2;
+    Signature Sign=4;
+    BatchSignature BatchSigns=5;
+    bytes Lastblkid=6;
+}
+
+
+
+message RawBlock{
+    int32 height=1;
+    bytes Root=2;
+}
+
+message HighProofs{
+    repeated HighProof HPs=1;
+}
+
+//new type
+message QCaggProof{
+    bytes AggQC=1;
+    repeated bytes MessageHash=2;
+    repeated int32 Heights=3;
+    repeated int32 IDs=4;
+    repeated bytes Mems=5;
+    //RawBC RawBC=1;
+    //Signature Sign=4;
+    //BatchSignature BatchSigns=5;    
+}
+
+message HighProof{
+    RawBC RawBC=1;
+    Signature Sign=4;
+    BatchSignature BatchSigns=5;    
+}
+
+
+message HeightRBC{
+    repeated int32 Heights=1;
+}
+
+message Signature{
+    int32 ID=1;
+    bytes content=2;
+}
+
+message Proof{
+    bool type=1; 
+    BatchSignature BatchSigns=2;
+}
+
+message OrderMsg{
+    int32 Type=1; //1:proto msg  2:callhelp msg 3:help msg 4:dumbomvba msg
+    bytes Content=2; 
+}
+
+
+message Msg{
+    RawMsg RawMsg=1;
+    Signature Sign=5;
+    BatchSignature SS=6;
+    BatchSignature SS2=7;
+    repeated Proof OldProof=8;
+}
+
+//type 1-11 
+message RawMsg{
+    int32 ID=1;
+    int32 Round=2;
+    int32 Type=3;
+    bytes values=4;
+    int32 Loop=6;
+}
+
+message DumbomvbaMsg{
+    int32 ID=1;
+    int32 Round=2;
+    int32 Type=3;
+    int32 Msglen=4;
+    repeated bytes Values=5;
+    Signature Sign=6;
+    BatchSignature SS=7;
+}
+
+message BAMsg{
+    int32 ID=1;
+    int32 MVBARound=2;
+    int32 BARound=3;
+    int32 Loop=4;
+    int32 Type=5;
+    bool Value=6;
+    repeated bool ConfValue=7;
+}
+
+message SRcvs{
+    repeated bool Rcv=1;
+}
+
+message Ctvote{
+    int32 Memid=1;
+    bool Vote=2;
+    repeated bytes Proof=3;
+    bytes Data=4;
+}
+
+
+message EnvMsg{
+    string ChainID=1;
+    bool IsConfig=2;
+    bytes Env=3;
+}
+
+message Cutblock{
+    repeated Blockinnode Blocksinnode=1;
+}
+
+message Blockinnode{
+    repeated BlockinK BlocksinK=1;
+}
+
+message BlockinK{
+    repeated BCBlock BCBlocks=1;
+}
+

@@ -1,0 +1,11 @@
+syntax = "proto3";   
+package struct;
+//protoc --go_out=. *.proto
+option go_package = "./";
+
+message test{
+    repeated bool a=1;
+    repeated bytes b=2;
+    int64 c=3;
+
+}

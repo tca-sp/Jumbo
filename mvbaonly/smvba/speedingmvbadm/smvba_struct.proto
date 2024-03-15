@@ -1,0 +1,58 @@
+syntax = "proto3";   
+package speedingmvba;
+//protoc --gofast_out=. *.proto
+
+message RawBlock{
+    int32 height=1;
+    bytes Root=2;
+}
+
+message HighProofs{
+    repeated HighProof HPs=1;
+}
+
+message HighProof{
+    RawBlock Rawblk=1;
+    Signature Sign=4;
+    repeated Signature Signs=5;
+}
+
+message Signature{
+    int32 ID=1;
+    bytes r=2;
+    bytes s=3;
+}
+
+message Proof{
+    bool type=1; 
+    repeated Signature Signatures=2;
+}
+
+message Msg{
+    RawMsg RawMsg=1;
+    Signature Sign=5;
+    repeated Signature SS=6;
+    repeated Signature SS2=7;
+    repeated Proof OldProof=8;
+}
+
+message RawMsg{
+    int32 ID=1;
+    int32 Round=2;
+    int32 Type=3;
+    bytes values=4;
+    int32 Loop=6;
+}
+
+message SRcvs{
+    repeated bool Rcv=1;
+}
+
+message Ctvote{
+    int32 Memid=1;
+    bool Vote=2;
+    repeated bytes Proof=3;
+    bytes Data=4;
+}
+
+

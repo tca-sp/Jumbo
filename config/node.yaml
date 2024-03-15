@@ -1,0 +1,38 @@
+Tx_pool: 127.0.0.1:1000
+Order:  127.0.0.1:2000
+BC_l: 127.0.0.1:3000
+BC_f: 127.0.0.1:400
+Order_m:  127.0.0.1:2100
+BC_l_m: 127.0.0.1:3100
+Node_num: 16
+SkPath : /src/dumbo_fabric/config/
+PkPath : /src/dumbo_fabric/config/
+BCIPPath : /src/dumbo_fabric/config/IP/broadcast/
+OrderIPPath : /src/dumbo_fabric/config/IP/order/
+TpIPPath : /src/dumbo_fabric/config/IP/txpool/
+ClientIPPath : /src/dumbo_fabric/config/IP/client/
+DBPath : /src/dumbo_fabric/database/leveldb/
+Sleeptime : 30
+BatchSize : 4000
+TxSize	: 250
+K : 1
+FBOrder : 4111
+BackFB : 9999
+Genesis : /src/github.com/hyperledger/fabric/genesisblock
+Islog : 0
+#type: schnorr_aggregate ecdsa schnorr
+SignatureType : "schnorr_aggregate"
+Testmode : true
+IsControlSpeed : false
+IsControlLatency : false
+#mByte/sec
+ClientNetSpeed : 1
+TxpoolNetSpeed : 6
+BroadcasterNetSpeed : 1
+OrderNetSpeed: 1
+#millisecond
+BroadcasterNetLatency : 50
+OrderNetLatency: 50
+UsingDumboMVBA : false
+#type: RBC CBC WRBC CBC_QCagg
+BroadcastType : "CBC_QCagg"
