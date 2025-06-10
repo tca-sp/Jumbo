@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
-	rbc "dumbo_fabric/fin/rbc"
-	sfm "dumbo_fabric/fin/signaturefreemvba"
-	"dumbo_fabric/network"
-	pb "dumbo_fabric/struct"
+	rbc "jumbo/fin/rbc"
+	sfm "jumbo/fin/signaturefreemvba"
+	"jumbo/network"
+	pb "jumbo/struct"
 	"flag"
 	"fmt"
 	"io"
@@ -14,7 +14,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
 )
 
@@ -64,7 +64,7 @@ func main() {
 	//read node.yaml
 	newOrder := &order{}
 	gopath := os.Getenv("GOPATH")
-	readBytes, err := ioutil.ReadFile(gopath + "/src/dumbo_fabric/config/node.yaml")
+	readBytes, err := ioutil.ReadFile(gopath + "/src/jumbo/config/node.yaml")
 	if err != nil {
 		panic(err)
 	}

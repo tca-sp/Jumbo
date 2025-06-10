@@ -2,7 +2,7 @@ package reliablebroadcast
 
 import (
 	"bytes"
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"encoding/binary"
 )
 

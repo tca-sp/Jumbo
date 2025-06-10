@@ -2,10 +2,10 @@ package speedingmvba
 
 import (
 	"crypto/sha256"
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func (mvba *MVBA) sign(msg []byte) pb.Signature {

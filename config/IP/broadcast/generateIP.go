@@ -9,7 +9,7 @@ func main() {
 	for i := 1; i <= 4; i++ {
 		for j := 1; j <= 4; j++ {
 			gopath := os.Getenv("GOPATH")
-			path := fmt.Sprintf(gopath+"/src/dumbo_fabric/config/IP/broadcast/ip%d%d.txt", i, j)
+			path := fmt.Sprintf(gopath+"/src/jumbo/config/IP/broadcast/ip%d%d.txt", i, j)
 
 			f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777) //linux 路径
 			/*f, err := os.OpenFile("D:/tmp/logs/test.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)*/ //windows路径

@@ -1,8 +1,8 @@
 package broadcast
 
 import (
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"sync"
 )
 

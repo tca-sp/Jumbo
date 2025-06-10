@@ -3,12 +3,12 @@ package wrbc
 import (
 	"bytes"
 	"crypto/sha256"
-	"dumbo_fabric/database/leveldb"
-	pb "dumbo_fabric/struct"
+	"jumbo/database/leveldb"
+	pb "jumbo/struct"
 	"log"
 	"sort"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBroadcast_follower(nid int, lid int, sid int, num int, output chan []byte, msgIn chan []byte, msgOut chan SendMsg, log log.Logger, db leveldb.DB, testmode bool) BC_f {

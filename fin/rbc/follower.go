@@ -2,12 +2,12 @@ package reliablebroadcast
 
 import (
 	"bytes"
-	mt "dumbo_fabric/crypto/merkle-tree"
-	rs "dumbo_fabric/crypto/reed-solomon"
-	pb "dumbo_fabric/struct"
+	mt "jumbo/crypto/merkle-tree"
+	rs "jumbo/crypto/reed-solomon"
+	pb "jumbo/struct"
 	//"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBroadcast_follower(nid int, lid int, sid int, num int, output chan pb.RBCOut, msgIn chan pb.RBCMsg, msgOut chan pb.SendMsg, height int, done chan bool) BC_f {

@@ -1,8 +1,8 @@
 package main
 
 import (
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 )
 
 func check_inputs_QCagg(new []byte, old []byte, num int, sigmeta cy.Signature) bool {

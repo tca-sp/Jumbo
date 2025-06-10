@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"dumbo_fabric/network"
-	pb "dumbo_fabric/struct"
+	"jumbo/network"
+	pb "jumbo/struct"
 	"flag"
 	"fmt"
 	"io"
@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"gopkg.in/yaml.v2"
 )
@@ -43,12 +43,13 @@ type Tx_pool struct {
 	Sleeptime      int  `yaml:"Sleeptime"`
 	net            network.Network
 	ModifyTXpool   bool `yaml:"ModifyTXpool"`
+	IsLocal        bool `yaml:"IsLocal"`
 }
 
 func NewTx_Pool(id int) *Tx_pool {
 	newTx_pool := &Tx_pool{}
 	gopath := os.Getenv("GOPATH")
-	tx_poolBytes, err := ioutil.ReadFile(gopath + "/src/dumbo_fabric/config/node.yaml")
+	tx_poolBytes, err := ioutil.ReadFile(gopath + "/src/jumbo/config/node.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -72,53 +73,61 @@ func NewTx_Pool(id int) *Tx_pool {
 
 func (tp *Tx_pool) Init() {
 	//read ip
-	gopath := os.Getenv("GOPATH")
-	TpIPPath := fmt.Sprintf("%s%sip.txt", gopath, tp.TpIPPath)
-	fi, err := os.Open(TpIPPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-	br := bufio.NewReader(fi)
 	var tpIP string
-	a, _, c := br.ReadLine()
-	if c == io.EOF {
-		panic("missing txpool ip")
-	}
-	tpIP = string(a)
-	fi.Close()
-
-	TpmIPPath := fmt.Sprintf("%s%sipm.txt", gopath, tp.TpIPPath)
-	fi, err = os.Open(TpmIPPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-	br = bufio.NewReader(fi)
 	var tpmIP string
-	a, _, c = br.ReadLine()
-	if c == io.EOF {
-		panic("missing txpool ip")
-	}
-	tpmIP = string(a)
-	fi.Close()
-
 	bcmips := make([]string, tp.K)
-	BCIPPath := fmt.Sprintf("%s%sipm.txt", gopath, tp.BCIPPath)
-	fi, err = os.Open(BCIPPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-	br = bufio.NewReader(fi)
-	for j := 0; j < tp.K; j++ {
+	if tp.IsLocal {
+		tpIP = fmt.Sprintf("127.0.0.1:%d", 11000+tp.ID)
+		tpmIP = fmt.Sprintf("127.0.0.1:%d", 12000+tp.ID)
+		bcmips[0] = fmt.Sprintf("127.0.0.1:%d", 17000+tp.ID)
+	} else {
+		gopath := os.Getenv("GOPATH")
+		TpIPPath := fmt.Sprintf("%s%sip.txt", gopath, tp.TpIPPath)
+		fi, err := os.Open(TpIPPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+		br := bufio.NewReader(fi)
+
 		a, _, c := br.ReadLine()
 		if c == io.EOF {
-			panic("missing broadcast ip")
+			panic("missing txpool ip")
 		}
-		bcmips[j] = string(a)
+		tpIP = string(a)
+		fi.Close()
+
+		TpmIPPath := fmt.Sprintf("%s%sipm.txt", gopath, tp.TpIPPath)
+		fi, err = os.Open(TpmIPPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+		br = bufio.NewReader(fi)
+
+		a, _, c = br.ReadLine()
+		if c == io.EOF {
+			panic("missing txpool ip")
+		}
+		tpmIP = string(a)
+		fi.Close()
+
+		BCIPPath := fmt.Sprintf("%s%sipm.txt", gopath, tp.BCIPPath)
+		fi, err = os.Open(BCIPPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+		br = bufio.NewReader(fi)
+		for j := 0; j < tp.K; j++ {
+			a, _, c := br.ReadLine()
+			if c == io.EOF {
+				panic("missing broadcast ip")
+			}
+			bcmips[j] = string(a)
+		}
+		fi.Close()
 	}
-	fi.Close()
 
 	if tp.ModifyTXpool {
 		go tp.handle_clientMsg_flex_m()
@@ -263,7 +272,7 @@ func (tp *Tx_pool) batch_block() {
 		txcount++
 		if firsttime && len(txBlk) >= tp.Min_BatchSize {
 			tp.batchblockCH <- txBlk[:tp.Min_BatchSize]
-			fmt.Println("first block:",time.Now())
+			fmt.Println("first block:", time.Now())
 			txcount = 0
 			txBlk = txBlk[:]
 			firsttime = false
@@ -405,6 +414,7 @@ func (tp *Tx_pool) handle_clientMsg_flex_m() {
 		select {
 		case <-tp.signalMsgCH:
 			issignal = true
+			fmt.Println("get a signal")
 		default:
 			select {
 			case <-tp.signalMsgCH:
@@ -463,4 +473,3 @@ func main() {
 	newTxPool.Init()
 
 }
-

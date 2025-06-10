@@ -5,13 +5,13 @@ BC_f: 127.0.0.1:400
 Order_m:  127.0.0.1:2100
 BC_l_m: 127.0.0.1:3100
 Node_num: 128
-SkPath : /src/dumbo_fabric/config/
-PkPath : /src/dumbo_fabric/config/
-BCIPPath : /src/dumbo_fabric/config/IP/broadcast/
-OrderIPPath : /src/dumbo_fabric/config/IP/order/
-TpIPPath : /src/dumbo_fabric/config/IP/txpool/
-ClientIPPath : /src/dumbo_fabric/config/IP/client/
-DBPath : /src/dumbo_fabric/database/leveldb/
+SkPath : /src/jumbo/config/
+PkPath : /src/jumbo/config/
+BCIPPath : /src/jumbo/config/IP/broadcast/
+OrderIPPath : /src/jumbo/config/IP/order/
+TpIPPath : /src/jumbo/config/IP/txpool/
+ClientIPPath : /src/jumbo/config/IP/client/
+DBPath : /src/jumbo/database/leveldb/
 Sleeptime : 40
 BatchSize : 4000
 Min_BatchSize : 1

@@ -2,7 +2,7 @@ package schnorr_aggregate
 
 import (
 	"crypto/sha256"
-	cgo_sign "dumbo_fabric/crypto/signature"
+	cgo_sign "jumbo/crypto/signature"
 	"encoding/pem"
 	"fmt"
 	"os"

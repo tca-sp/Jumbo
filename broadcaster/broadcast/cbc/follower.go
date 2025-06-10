@@ -3,8 +3,8 @@ package broadcast
 import (
 	"bytes"
 	"crypto/sha256"
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"encoding/binary"
 	"fmt"
 	"math/rand"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"dumbo_fabric/database/leveldb"
+	"jumbo/database/leveldb"
 
 	mapset "github.com/deckarep/golang-set"
 )
@@ -92,7 +92,7 @@ func (bcf *BC_f) Start() {
 	bcf.handle_bcblock()
 }
 
-//handle normal protocol msg, round can be added here
+// handle normal protocol msg, round can be added here
 func (bcf *BC_f) handle_bcblock() {
 	fmt.Println(bcf.nid, "inside handle_bcblock")
 
@@ -477,7 +477,7 @@ func (bcf *BC_f) check_bcblock(block pb.BCBlock) {
 
 }
 
-//handle callhelp msg from others
+// handle callhelp msg from others
 func (bcf *BC_f) handle_callhelp() {
 
 	for {
@@ -519,7 +519,7 @@ func (bcf *BC_f) handle_callhelp() {
 	}
 }
 
-//check if can help others now
+// check if can help others now
 func (bcf *BC_f) checkcallhelpbuf(height int) {
 	if height > 0 {
 		//check height-1
@@ -594,7 +594,7 @@ func IntToBytes(n int) []byte {
 	return bytesBuffer.Bytes()
 }
 
-//pop first block in buffer, don't call it when buffer is nil
+// pop first block in buffer, don't call it when buffer is nil
 func (fb *futurebuffer) getlowwest() (pb.BCBlock, int) {
 	fb.lock.Lock()
 	defer fb.lock.Unlock()
@@ -615,7 +615,7 @@ func (fb *futurebuffer) getlowwest() (pb.BCBlock, int) {
 
 }
 
-//put a block in buffer, and update lowwest
+// put a block in buffer, and update lowwest
 func (fb *futurebuffer) put(block pb.BCBlock) {
 	fb.lock.Lock()
 	defer fb.lock.Unlock()
@@ -650,8 +650,8 @@ func (fb *futurebuffer) put(block pb.BCBlock) {
 	//fmt.Println("set lowwest to", fb.lowwest)
 }
 
-//incoming a future bcblock, check if need to send new callhelp msg
-//to be done: update highest
+// incoming a future bcblock, check if need to send new callhelp msg
+// to be done: update highest
 func (ch *callhelp) put(block pb.BCBlock, myheight int) (int, int) {
 	ch.lock.Lock()
 	//fmt.Println("caculate which block to callhelp ", block.RawBC.Height, myheight, ch.highest)
@@ -688,7 +688,7 @@ func (ch *callhelp) put(block pb.BCBlock, myheight int) (int, int) {
 
 }
 
-//after receive a legal bcblock or help msg, remove it from missblocks
+// after receive a legal bcblock or help msg, remove it from missblocks
 func (ch *callhelp) remove(block pb.BCBlock) {
 	ch.lock.Lock()
 	defer ch.lock.Unlock()
@@ -697,7 +697,6 @@ func (ch *callhelp) remove(block pb.BCBlock) {
 	}
 }
 
-//
 func (chb *callhelpbuffer) put(key int, subvalue int) {
 	chb.lock.Lock()
 	defer chb.lock.Unlock()

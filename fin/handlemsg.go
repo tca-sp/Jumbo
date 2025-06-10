@@ -1,10 +1,10 @@
 package main
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func (order *order) handle_bamsgCH(round int, done chan bool, bamsgCH chan pb.BAMsg, oldbuf chan pb.BAMsg, futurebuf chan pb.BAMsg) {

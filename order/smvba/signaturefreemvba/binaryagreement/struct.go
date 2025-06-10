@@ -1,7 +1,7 @@
 package binaryagreement
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 )
 
 type BA struct {

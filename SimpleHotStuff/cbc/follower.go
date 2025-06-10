@@ -3,13 +3,13 @@ package broadcast
 import (
 	"bytes"
 	"crypto/sha256"
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"encoding/binary"
 	"fmt"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBroadcast_follower(id int, num int, sigmeta cy.Signature, output chan pb.BCBlock, msgIn chan []byte, msgOut chan SendMsg) BC_f {

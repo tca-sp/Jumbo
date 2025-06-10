@@ -1,9 +1,9 @@
 package reliablebroadcast
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBroadcast_follower(nid int, lid int, round int, num int, output1 chan pb.RBCOut, output2 chan pb.RBCOut, msgIn chan pb.RBCMsg, msgOut chan pb.SendMsg, check_input_rbc func([]byte, []bool, chan bool) bool, heights []bool, close chan bool, closeval chan bool) BC_f {

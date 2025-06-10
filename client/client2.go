@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"dumbo_fabric/network"
+	"jumbo/network"
 	"flag"
 	"fmt"
 	"io"
@@ -31,10 +31,11 @@ type client struct {
 	ClientNetSpeed int  `yaml:"ClientNetSpeed"`
 	Sleeptime      int  `yaml:"Sleeptime"`
 
-	PRECISION int `yaml:"PRECISION"`
+	PRECISION int  `yaml:"PRECISION"`
+	IsLocal   bool `yaml:"IsLocal"`
 }
 
-var configpath string = "/src/dumbo_fabric/config/node.yaml"
+var configpath string = "/src/jumbo/config/node.yaml"
 var log1 = log.New(os.Stderr, "CLIENT: ", 3)
 var islog uint64
 
@@ -99,7 +100,7 @@ func main() {
 	for {
 		net.Send(client.con, msg)
 		if firsttime {
-		
+
 			fmt.Println(time.Now())
 			ticker = *time.NewTicker(time.Duration(client.PRECISION) * time.Millisecond)
 			firsttime = false
@@ -153,23 +154,29 @@ func (client *client) init(id int) {
 	}
 
 	//read tx_pool IP, dial and send txs to it
-	TpIPPath := fmt.Sprintf("%s%sip.txt", gopath, client.TpIPPath)
-	//TpIPPath := fmt.Sprintf("%s%sipm.txt", gopath, client.BCIPPath)
-	fi, err := os.Open(TpIPPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-
-	br := bufio.NewReader(fi)
 	var tpIP string
-	a, _, c := br.ReadLine()
-	if c == io.EOF {
-		panic("none txpool ip")
-	}
-	tpIP = string(a)
 
-	fi.Close()
+	if client.IsLocal {
+		tpIP = fmt.Sprintf("127.0.0.1:%d", 11000+id)
+	} else {
+		TpIPPath := fmt.Sprintf("%s%sip.txt", gopath, client.TpIPPath)
+		//TpIPPath := fmt.Sprintf("%s%sipm.txt", gopath, client.BCIPPath)
+		fi, err := os.Open(TpIPPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+
+		br := bufio.NewReader(fi)
+
+		a, _, c := br.ReadLine()
+		if c == io.EOF {
+			panic("none txpool ip")
+		}
+		tpIP = string(a)
+
+		fi.Close()
+	}
 
 	//read client IP, using to receive payback from order
 	/*ClientIPPath := fmt.Sprintf("%s%sip.txt", gopath, client.ClientIPPath)
@@ -220,4 +227,3 @@ func (client *client) handle_feedback(id int) {
 	}
 
 }
-

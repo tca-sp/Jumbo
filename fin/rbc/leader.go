@@ -3,11 +3,11 @@ package reliablebroadcast
 import (
 	"fmt"
 	"bytes"
-	mt "dumbo_fabric/crypto/merkle-tree"
-	rs "dumbo_fabric/crypto/reed-solomon"
-	pb "dumbo_fabric/struct"
+	mt "jumbo/crypto/merkle-tree"
+	rs "jumbo/crypto/reed-solomon"
+	pb "jumbo/struct"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var txbuffsize int = 10000

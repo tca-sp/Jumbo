@@ -1,9 +1,9 @@
 package broadcast
 
 import (
-	cy "dumbo_fabric/crypto/signature"
-	"dumbo_fabric/database/leveldb"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	"jumbo/database/leveldb"
+	pb "jumbo/struct"
 	"sync"
 
 	mapset "github.com/deckarep/golang-set"

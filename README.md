@@ -46,15 +46,15 @@ Then install all dependencies as follows:
     go env -w GO111MODULE=auto
     go get -u github.com/klauspost/reedsolomon
     go get -u github.com/herumi/bls-go-binary
-    mv ~/dumbo_fabric/ ~/golang/src
+    mv ~/jumbo/ ~/golang/src
 ```
 Then build Jumbo
 ```
-    cd ~/golang/src/dumbo_fabric/
+    cd ~/golang/src/jumbo/
     bash build.sh
 ```
 Create an image using this instance. If you are not familiar with AWS, you can visit [Create an AMI from an Amazon EC2 Instance](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/tkv-create-ami-from-instance.html) to get some help.
-4.  Configure the testbed.(/dumbo_fabric/remote/)
+4.  Configure the testbed.(/jumbo/remote/)
 	First modify node.yaml, parameters you should modify are following:
 ```
 	Node_num: how many nodes you want to bench

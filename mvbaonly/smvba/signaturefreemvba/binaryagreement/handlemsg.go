@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"encoding/binary"
 )
 

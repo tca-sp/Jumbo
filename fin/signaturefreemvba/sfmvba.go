@@ -3,9 +3,9 @@ package signaturefreemvba
 import (
 	"bytes"
 	"crypto/sha256"
-	ba "dumbo_fabric/fin/signaturefreemvba/binaryagreement"
-	rbc "dumbo_fabric/fin/signaturefreemvba/rbcwithfinish"
-	pb "dumbo_fabric/struct"
+	ba "jumbo/fin/signaturefreemvba/binaryagreement"
+	rbc "jumbo/fin/signaturefreemvba/rbcwithfinish"
+	pb "jumbo/struct"
 	"encoding/binary"
 	"fmt"
 )

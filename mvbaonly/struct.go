@@ -1,7 +1,7 @@
 package main
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"sync"
 
 	mapset "github.com/deckarep/golang-set"
@@ -19,7 +19,7 @@ type cut struct {
 	new [][]int
 }
 
-//channel_status
+// channel_status
 type cs struct {
 	channelID string
 	number    int

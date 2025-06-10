@@ -7,5 +7,5 @@ file="ip.txt"
 ips=$(<"$file")
 for ip in $ips
 do
-    ssh -i chenghao.pem ubuntu@${ip} -tt "export GOPATH=/home/ubuntu/golang && cd ./golang/src/dumbo_fabric/scripts/ && nohup bash startclient.sh $1 $2"&
+    ssh -i chenghao.pem ubuntu@${ip} -tt "export GOPATH=/home/ubuntu/golang && cd ./golang/src/jumbo/scripts/ && nohup bash startclient.sh $1 $2"&
 done

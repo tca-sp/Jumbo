@@ -1,7 +1,7 @@
 package speedingmvba
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 )
 
 func (mvba *MVBA) gen_rawMsg(id int, round int, msgtype int, value []byte, loop int) pb.RawMsg {

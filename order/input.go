@@ -3,14 +3,14 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"fmt"
 	"math/rand"
 	"reflect"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func (od_m *order_m) check_send() {

@@ -1,7 +1,7 @@
 package signaturefreemvba
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 //	"fmt"
 )
 

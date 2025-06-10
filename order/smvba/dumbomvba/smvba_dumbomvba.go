@@ -2,11 +2,11 @@ package dumbomvba
 
 import (
 	"bytes"
-	merkletree "dumbo_fabric/crypto/merkle-tree"
-	mt "dumbo_fabric/crypto/merkle-tree"
-	rs "dumbo_fabric/crypto/reed-solomon"
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	merkletree "jumbo/crypto/merkle-tree"
+	mt "jumbo/crypto/merkle-tree"
+	rs "jumbo/crypto/reed-solomon"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"

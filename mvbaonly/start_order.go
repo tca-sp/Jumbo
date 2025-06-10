@@ -3,14 +3,14 @@ package main
 import (
 	"bufio"
 	"bytes"
-	cy "dumbo_fabric/crypto/signature"
-	bls "dumbo_fabric/crypto/signature/bls"
-	ec "dumbo_fabric/crypto/signature/ecdsa"
-	schnorr "dumbo_fabric/crypto/signature/schnorr"
-	aggregate "dumbo_fabric/crypto/signature/schnorr_aggregate"
-	mvba "dumbo_fabric/mvbaonly/smvba"
-	"dumbo_fabric/network"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	bls "jumbo/crypto/signature/bls"
+	ec "jumbo/crypto/signature/ecdsa"
+	schnorr "jumbo/crypto/signature/schnorr"
+	aggregate "jumbo/crypto/signature/schnorr_aggregate"
+	mvba "jumbo/mvbaonly/smvba"
+	"jumbo/network"
+	pb "jumbo/struct"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -22,7 +22,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	mapset "github.com/deckarep/golang-set"
 )
@@ -76,7 +76,7 @@ func main() {
 	//read node.yaml
 	newOrder_m := &order_m{}
 	gopath := os.Getenv("GOPATH")
-	readBytes, err := ioutil.ReadFile(gopath + "/src/dumbo_fabric/config/node.yaml")
+	readBytes, err := ioutil.ReadFile(gopath + "/src/jumbo/config/node.yaml")
 	if err != nil {
 		panic(err)
 	}

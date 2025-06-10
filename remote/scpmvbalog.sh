@@ -8,7 +8,7 @@ ips=$(<"$file")
  
 for ip in $ips
 do
-    (scp -o "StrictHostKeyChecking no" -i chenghao.pem ubuntu@${ip}:~/golang/src/dumbo_fabric/mvbaonly/log/orderlog.txt $1${id}.txt) &
+    (scp -o "StrictHostKeyChecking no" -i chenghao.pem ubuntu@${ip}:~/golang/src/jumbo/mvbaonly/log/orderlog.txt $1${id}.txt) &
     let id++
 done
 

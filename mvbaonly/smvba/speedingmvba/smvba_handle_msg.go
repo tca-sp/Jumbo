@@ -2,11 +2,11 @@ package speedingmvba
 
 import (
 	"bytes"
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"fmt"
 	"math/big"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 /*type SendMsg struct {

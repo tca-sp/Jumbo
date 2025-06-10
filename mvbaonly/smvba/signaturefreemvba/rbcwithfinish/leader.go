@@ -2,11 +2,11 @@ package reliablebroadcast
 
 import (
 	"bytes"
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 
 	//"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBroadcast_leader(nid int, lid int, round int, num int, input []byte, output1 chan pb.RBCOut, output2 chan pb.RBCOut, msgIn chan pb.RBCMsg, msgOut chan pb.SendMsg, close chan bool) BC_l {

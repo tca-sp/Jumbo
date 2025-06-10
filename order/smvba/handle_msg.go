@@ -1,10 +1,10 @@
 package smvba
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	//"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 //func (order *Order) handle_rcvmsgCH() {

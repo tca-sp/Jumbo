@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/rand"
-	bls "dumbo_fabric/crypto/signature/bls"
+	bls "jumbo/crypto/signature/bls"
 	"fmt"
 	"log"
 	"strconv"
@@ -23,7 +23,7 @@ func main() {
 
 func testbug(num int) {
 	gopath := os.Getenv("GOPATH")
-	keypath := "/src/dumbo_fabric/config/"
+	keypath := "/src/jumbo/config/"
 
 	var sigms []bls.Signature
 
@@ -57,7 +57,7 @@ func testbug(num int) {
 
 func testbugmsg(num int) {
 	gopath := os.Getenv("GOPATH")
-	keypath := "/src/dumbo_fabric/config/"
+	keypath := "/src/jumbo/config/"
 
 	var sigms []bls.Signature
 	bugQCagg := []byte{49, 32, 99, 49, 48, 54, 101, 99, 49, 101, 54, 102, 98, 51, 53, 97, 52, 97, 55, 50, 50, 51, 52, 53, 55, 48, 52, 100, 97, 54, 48, 54, 51, 99, 56, 102, 54, 97, 98, 56, 100, 50, 53, 97, 50, 51, 99, 102, 48, 49, 97, 55, 50, 57, 100, 101, 48, 53, 49, 98, 100, 101, 53, 102, 48, 55, 51, 100, 101, 53, 55, 56, 101, 102, 97, 100, 56, 102, 53, 52, 48, 56, 97, 101, 54, 53, 56, 50, 97, 53, 57, 100, 55, 97, 53, 48, 52, 32, 54, 101, 52, 56, 49, 48, 101, 55, 55, 48, 52, 57, 50, 54, 52, 55, 51, 98, 102, 52, 53, 99, 98, 55, 55, 98, 54, 57, 99, 57, 97, 57, 56, 98, 51, 49, 51, 97, 50, 98, 49, 99, 97, 101, 50, 97, 52, 97, 52, 97, 57, 49, 99, 49, 56, 100, 98, 55, 50, 51, 97, 101, 56, 57, 56, 49, 99, 102, 57, 52, 48, 54, 98, 48, 97, 98, 55, 54, 57, 53, 53, 101, 102, 101, 101, 51, 54, 57, 52, 100, 101, 50, 101, 49}
@@ -129,7 +129,7 @@ func testbugmsg(num int) {
 
 func testQC(num int) {
 	gopath := os.Getenv("GOPATH")
-	keypath := "/src/dumbo_fabric/config/"
+	keypath := "/src/jumbo/config/"
 
 	var sigms []bls.Signature
 
@@ -178,7 +178,7 @@ func testQC(num int) {
 func test(num int) {
 	th := (num-1)/3*2 + 1
 	gopath := os.Getenv("GOPATH")
-	keypath := "/src/dumbo_fabric/config/"
+	keypath := "/src/jumbo/config/"
 
 	var sigms []bls.Signature
 	msgs := make([][]byte, num)

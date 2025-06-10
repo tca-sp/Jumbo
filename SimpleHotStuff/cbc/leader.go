@@ -3,12 +3,12 @@ package broadcast
 import (
 	"bytes"
 	"crypto/sha256"
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBroadcast_leader(id int, num int, sigmeta cy.Signature, input chan []byte, output chan pb.BCBlock, msgIn chan []byte, msgOut chan SendMsg, batchsize int) BC_l {

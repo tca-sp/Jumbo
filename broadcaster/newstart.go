@@ -13,23 +13,23 @@ import (
 	"os"
 	"time"
 
-	//broadcast "dumbo_fabric/broadcaster/broadcast/rbc"
-	//broadcast "dumbo_fabric/broadcaster/broadcast/cbc"
-	cbc "dumbo_fabric/broadcaster/broadcast/cbc"
-	rbc "dumbo_fabric/broadcaster/broadcast/rbc"
-	wrbc "dumbo_fabric/broadcaster/broadcast/wrbc"
-	cy "dumbo_fabric/crypto/signature"
-	bls "dumbo_fabric/crypto/signature/bls"
-	ec "dumbo_fabric/crypto/signature/ecdsa"
-	schnorr "dumbo_fabric/crypto/signature/schnorr"
-	aggregate "dumbo_fabric/crypto/signature/schnorr_aggregate"
+	//broadcast "jumbo/broadcaster/broadcast/rbc"
+	//broadcast "jumbo/broadcaster/broadcast/cbc"
+	cbc "jumbo/broadcaster/broadcast/cbc"
+	rbc "jumbo/broadcaster/broadcast/rbc"
+	wrbc "jumbo/broadcaster/broadcast/wrbc"
+	cy "jumbo/crypto/signature"
+	bls "jumbo/crypto/signature/bls"
+	ec "jumbo/crypto/signature/ecdsa"
+	schnorr "jumbo/crypto/signature/schnorr"
+	aggregate "jumbo/crypto/signature/schnorr_aggregate"
 
-	"dumbo_fabric/database/leveldb"
-	"dumbo_fabric/network"
+	"jumbo/database/leveldb"
+	"jumbo/network"
 
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
 )
 
@@ -54,8 +54,9 @@ type BC_m struct {
 	BroadcastType         string `yaml:"BroadcastType"`
 	Sleeptime             int    `yaml:"Sleeptime"`
 	IsControlBatch        bool   `yaml:"IsControlBatch"`
-	
-	CrashMVBA             int    `yaml:"CrashMVBA"`
+
+	CrashMVBA int  `yaml:"CrashMVBA"`
+	IsLocal   bool `yaml:"IsLocal"`
 }
 
 type BC struct {
@@ -108,7 +109,7 @@ func main() {
 	newBC_m := &BC_m{}
 	gopath := os.Getenv("GOPATH")
 	fmt.Println(gopath)
-	readBytes, err := ioutil.ReadFile(gopath + "/src/dumbo_fabric/config/node.yaml")
+	readBytes, err := ioutil.ReadFile(gopath + "/src/jumbo/config/node.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -144,59 +145,70 @@ func main() {
 	signature.Init(gopath+newBC_m.PkPath, newBC_m.Node_num, nid)
 
 	//read IP
-	ipPath := fmt.Sprintf("%s%sip.txt", gopath, newBC_m.BCIPPath)
-	fi, err := os.Open(ipPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
 
-	br := bufio.NewReader(fi)
 	ips := make([]string, newBC_m.Node_num)
+	var tpIP string
+	var ordermIP string
+	if newBC_m.IsLocal {
 
-	for i := 0; i < newBC_m.Node_num; i++ {
+		tpIP = fmt.Sprintf("127.0.0.1:%d", 12000+nid)
+		ordermIP = fmt.Sprintf("127.0.0.1:%d", 14000+nid)
+		for i := 0; i < newBC_m.Node_num; i++ {
+			ips[i] = fmt.Sprintf("127.0.0.1:%d", 15000+lid*newBC_m.Node_num+i+1)
+		}
+
+	} else {
+		ipPath := fmt.Sprintf("%s%sip.txt", gopath, newBC_m.BCIPPath)
+		fi, err := os.Open(ipPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+
+		br := bufio.NewReader(fi)
+
+		for i := 0; i < newBC_m.Node_num; i++ {
+			a, _, c := br.ReadLine()
+			if c == io.EOF {
+				break
+			}
+			ips[i] = string(a) + fmt.Sprintf(":%d", 14000+sid*newBC_m.Node_num+lid)
+		}
+		fi.Close()
+
+		orderipmPath := fmt.Sprintf("%s%sipm.txt", gopath, newBC_m.OrderIPPath)
+		fi, err = os.Open(orderipmPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+
+		br = bufio.NewReader(fi)
 		a, _, c := br.ReadLine()
 		if c == io.EOF {
-			break
+			panic("missing order ip")
 		}
-		ips[i] = string(a) + fmt.Sprintf(":%d", 14000+sid*newBC_m.Node_num+lid)
+		ordermIP = string(a)
+
+		fi.Close()
+
+		TpIPPath := fmt.Sprintf("%s%sipm.txt", gopath, newBC_m.TpIPPath)
+		fi, err = os.Open(TpIPPath)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			return
+		}
+
+		br = bufio.NewReader(fi)
+
+		a, _, c = br.ReadLine()
+		if c == io.EOF {
+			panic("missing txpool ip")
+		}
+		tpIP = string(a)
+
+		fi.Close()
 	}
-	fi.Close()
-
-	orderipmPath := fmt.Sprintf("%s%sipm.txt", gopath, newBC_m.OrderIPPath)
-	fi, err = os.Open(orderipmPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-
-	br = bufio.NewReader(fi)
-	var ordermIP string
-	a, _, c := br.ReadLine()
-	if c == io.EOF {
-		panic("missing order ip")
-	}
-	ordermIP = string(a)
-
-	fi.Close()
-
-
-	TpIPPath := fmt.Sprintf("%s%sipm.txt", gopath, newBC_m.TpIPPath)
-	fi, err = os.Open(TpIPPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-
-	br = bufio.NewReader(fi)
-	var tpIP string
-	a, _, c = br.ReadLine()
-	if c == io.EOF {
-		panic("missing txpool ip")
-	}
-	tpIP = string(a)
-
-	fi.Close()
 
 	if newBC_m.BroadcastType == "CBC_QCagg" {
 		newBC_m.BroadcastType = "CBC"
@@ -254,8 +266,8 @@ func main() {
 			net:                 network.New(newBC_m.IsControlSpeed, newBC_m.BroadcasterNetSpeed, newBC_m.IsControlLatency, newBC_m.BroadcasterNetLatency),
 			bctype:              newBC_m.BroadcastType,
 			IsControlBatch:      newBC_m.IsControlBatch,
-			
-			CrashMVBA:           newBC_m.CrashMVBA,
+
+			CrashMVBA: newBC_m.CrashMVBA,
 		}
 	} else if newBC_m.BroadcastType == "WRBC" {
 		newBC = &BC{
@@ -281,7 +293,7 @@ func main() {
 			net:            network.New(newBC_m.IsControlSpeed, newBC_m.BroadcasterNetSpeed, newBC_m.IsControlLatency, newBC_m.BroadcasterNetLatency),
 			bctype:         newBC_m.BroadcastType,
 			IsControlBatch: newBC_m.IsControlBatch,
-			CrashMVBA:           newBC_m.CrashMVBA,
+			CrashMVBA:      newBC_m.CrashMVBA,
 		}
 	} else {
 		fmt.Println(newBC_m.BroadcastType)
@@ -339,27 +351,33 @@ func main() {
 	//start BC
 	go newBC.handle_msg2orderCH()
 	if lid == nid {
-		ipmPath := fmt.Sprintf("%s%sipm.txt", gopath, newBC_m.BCIPPath)
-		fi, err := os.Open(ipmPath)
-		if err != nil {
-			fmt.Printf("Error: %s\n", err)
-			return
-		}
-
-		br := bufio.NewReader(fi)
 		var bcmIP string
+		if newBC_m.IsLocal {
+			bcmIP = fmt.Sprintf("127.0.0.1:%d", 17000+nid)
 
-		for i := 0; i < 1; i++ {
-			a, _, c := br.ReadLine()
-			if c == io.EOF {
-				break
+		} else {
+			ipmPath := fmt.Sprintf("%s%sipm.txt", gopath, newBC_m.BCIPPath)
+			fi, err := os.Open(ipmPath)
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				return
 			}
-			if i == newBC.sid-1 {
-				bcmIP = string(a)
-				break
+
+			br := bufio.NewReader(fi)
+
+			for i := 0; i < 1; i++ {
+				a, _, c := br.ReadLine()
+				if c == io.EOF {
+					break
+				}
+				if i == newBC.sid-1 {
+					bcmIP = string(a)
+					break
+				}
 			}
+			fi.Close()
 		}
-		fi.Close()
+
 		newBC.start_leader(bcmIP)
 	} else {
 		newBC.start_follower()
@@ -965,4 +983,3 @@ func IntToBytes(n int) []byte {
 	binary.Write(bytesBuffer, binary.BigEndian, x)
 	return bytesBuffer.Bytes()
 }
-

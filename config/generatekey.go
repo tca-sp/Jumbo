@@ -1,7 +1,7 @@
 package main
 
 import (
-//	cgo_sign "dumbo_fabric/crypto/signature"
+	//cgo_sign "jumbo/crypto/signature"
 	"encoding/pem"
 	"fmt"
 	"os"
@@ -10,13 +10,13 @@ import (
 )
 
 const max_num = 500
-const keypath = "/src/dumbo_fabric/config"
+const keypath = "/src/jumbo/config"
 
 func main() {
 	gopath := os.Getenv("GOPATH")
 	blsinit()
 	for i := 0; i < max_num; i++ {
-/*		//generate ecdsa key
+		/*//generate ecdsa key
 		skpath := fmt.Sprintf("%s%s/ecdsakey/sk/sk%d.pem", gopath, keypath, i)
 		pkpath := fmt.Sprintf("%s%s/ecdsakey/pk/pk%d.pem", gopath, keypath, i)
 		sk := cgo_sign.Generate_Key()
@@ -32,8 +32,8 @@ func main() {
 		signkey2 := cgo_sign.NewSignKey(sk, 1)
 		pk = signkey2.Pk
 		cgo_sign.KeyStore(sk, "esdsa private key", skpath)
-		cgo_sign.KeyStore(pk, "esdsa public key", pkpath)
-*/
+		cgo_sign.KeyStore(pk, "esdsa public key", pkpath)*/
+
 		//generate bls key
 		skpath := fmt.Sprintf("%s%s/blskey/sk/12381/sk%d.pem", gopath, keypath, i)
 		pkpath := fmt.Sprintf("%s%s/blskey/pk/12381/pk%d.pem", gopath, keypath, i)
@@ -74,4 +74,3 @@ func BLSKeyStore(key []byte, keytype string, path string) error {
 	file.Close()
 	return nil
 }
-

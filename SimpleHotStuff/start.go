@@ -12,17 +12,17 @@ import (
 	"os"
 	"time"
 
-	//broadcast "dumbo_fabric/broadcaster/broadcast/rbc"
-	//broadcast "dumbo_fabric/broadcaster/broadcast/cbc"
-	cbc "dumbo_fabric/SimpleHotStuff/cbc"
-	cy "dumbo_fabric/crypto/signature"
-	bls "dumbo_fabric/crypto/signature/bls"
-	ec "dumbo_fabric/crypto/signature/ecdsa"
-	schnorr "dumbo_fabric/crypto/signature/schnorr"
-	aggregate "dumbo_fabric/crypto/signature/schnorr_aggregate"
+	//broadcast "jumbo/broadcaster/broadcast/rbc"
+	//broadcast "jumbo/broadcaster/broadcast/cbc"
+	cbc "jumbo/SimpleHotStuff/cbc"
+	cy "jumbo/crypto/signature"
+	bls "jumbo/crypto/signature/bls"
+	ec "jumbo/crypto/signature/ecdsa"
+	schnorr "jumbo/crypto/signature/schnorr"
+	aggregate "jumbo/crypto/signature/schnorr_aggregate"
 
-	"dumbo_fabric/network"
-	pb "dumbo_fabric/struct"
+	"jumbo/network"
+	pb "jumbo/struct"
 
 	"gopkg.in/yaml.v2"
 )
@@ -68,7 +68,7 @@ func main() {
 	newBC_m := &BC_m{}
 	gopath := os.Getenv("GOPATH")
 	fmt.Println(gopath)
-	readBytes, err := ioutil.ReadFile(gopath + "/src/dumbo_fabric/config/node.yaml")
+	readBytes, err := ioutil.ReadFile(gopath + "/src/jumbo/config/node.yaml")
 	if err != nil {
 		panic(err)
 	}

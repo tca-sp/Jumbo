@@ -1,27 +1,28 @@
 Tx_pool: 127.0.0.1:1000
-Order:  127.0.0.1:2000
-BC_l: 127.0.0.1:3000
-BC_f: 127.0.0.1:400
-Order_m:  127.0.0.1:2100
-BC_l_m: 127.0.0.1:3100
-Node_num: 16
-SkPath : /src/dumbo_fabric/config/
-PkPath : /src/dumbo_fabric/config/
-BCIPPath : /src/dumbo_fabric/config/IP/broadcast/
-OrderIPPath : /src/dumbo_fabric/config/IP/order/
-TpIPPath : /src/dumbo_fabric/config/IP/txpool/
-ClientIPPath : /src/dumbo_fabric/config/IP/client/
-DBPath : /src/dumbo_fabric/database/leveldb/
-Sleeptime : 30
+Tx_poolm: 127.0.0.1:2000
+Order:  127.0.0.1:3000
+Order_m:  127.0.0.1:4000
+BC_l: 127.0.0.1:5000
+BC_l_m: 127.0.0.1:7000
+Node_num: 4
+SkPath : /src/jumbo/config/
+PkPath : /src/jumbo/config/
+BCIPPath : /src/jumbo/config/IP/broadcast/
+OrderIPPath : /src/jumbo/config/IP/order/
+TpIPPath : /src/jumbo/config/IP/txpool/
+ClientIPPath : /src/jumbo/config/IP/client/
+DBPath : /src/jumbo/database/leveldb/
+Sleeptime : 10
 BatchSize : 4000
-TxSize	: 250
+Min_BatchSize : 4000
+TxSize  : 250
 K : 1
 FBOrder : 4111
 BackFB : 9999
 Genesis : /src/github.com/hyperledger/fabric/genesisblock
 Islog : 0
-#type: schnorr_aggregate ecdsa schnorr
-SignatureType : "schnorr_aggregate"
+#type: schnorr_aggregate ecdsa schnorr bls
+SignatureType : "bls"
 Testmode : true
 IsControlSpeed : false
 IsControlLatency : false
@@ -35,4 +36,16 @@ BroadcasterNetLatency : 50
 OrderNetLatency: 50
 UsingDumboMVBA : false
 #type: RBC CBC WRBC CBC_QCagg
-BroadcastType : "CBC_QCagg"
+BroadcastType : "WRBC"
+#type normal signaturefree
+MVBAType : "signaturefree"
+PRECISION : 50
+IsControlBatch : false
+Interval : 100
+Faults : 0
+ByzantineFaults : 0
+ModifyTXpool : true
+CrashMVBA: 0
+# k for 1/k quality, if k=0, do nothing
+ByzFairness: 0
+IsLocal : true

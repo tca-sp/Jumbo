@@ -3,13 +3,13 @@ package broadcast
 import (
 	"bytes"
 	"crypto/sha256"
-	cy "dumbo_fabric/crypto/signature"
-	"dumbo_fabric/database/leveldb"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	"jumbo/database/leveldb"
+	pb "jumbo/struct"
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var txbuffsize int = 20000

@@ -3,13 +3,13 @@ package wrbc
 import (
 	"bytes"
 	"crypto/sha256"
-	"dumbo_fabric/database/leveldb"
-	pb "dumbo_fabric/struct"
+	"jumbo/database/leveldb"
+	pb "jumbo/struct"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 var txbuffsize int = 10000

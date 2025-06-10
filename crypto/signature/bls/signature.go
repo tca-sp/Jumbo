@@ -39,7 +39,7 @@ func (sig *Signature) Verify(id int, signature []byte, msg []byte) bool {
 	return blssig.Verify(&sig.blspks[id], string(hashText))
 }
 
-//unify half-aggrate schnorr signatures and simply join ecdsa and schnorr signature
+// unify half-aggrate schnorr signatures and simply join ecdsa and schnorr signature
 func (sig *Signature) BatchSignature(signatures [][]byte, msg []byte, mems []int32) []byte {
 	var agg bls.Sign
 	sigs := make([]bls.Sign, len(mems))
@@ -55,7 +55,7 @@ func (sig *Signature) BatchSignature(signatures [][]byte, msg []byte, mems []int
 	return []byte(agg.GetHexString())
 }
 
-//unify half-aggrate schnorr signatures verify and simply verify ecdsa or schnorr signature one by one
+// unify half-aggrate schnorr signatures verify and simply verify ecdsa or schnorr signature one by one
 func (sig *Signature) BatchSignatureVerify(BatchSignature []byte, msg []byte, mems []int32) bool {
 	h := sha256.New()
 	h.Write(msg)
@@ -76,7 +76,7 @@ func (sig *Signature) BatchSignatureVerify(BatchSignature []byte, msg []byte, me
 	return aggsig.FastAggregateVerify(blspks, hashText)
 }
 
-//load keys
+// load keys
 func (sig *Signature) Init(path string, num int, id int) {
 	//init bls
 	var g_Qcoeff []uint64

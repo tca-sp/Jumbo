@@ -3,7 +3,7 @@ package binaryagreement
 import (
 	"bytes"
 	"crypto/sha256"
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"encoding/binary"
 	"fmt"
 )

@@ -1,8 +1,8 @@
 package speedingmvba
 
 import (
-	cy "dumbo_fabric/crypto/signature"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"fmt"
 	"sync"
 )

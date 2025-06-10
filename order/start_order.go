@@ -3,15 +3,15 @@ package main
 import (
 	"bufio"
 	"bytes"
-	cy "dumbo_fabric/crypto/signature"
-	bls "dumbo_fabric/crypto/signature/bls"
-	ec "dumbo_fabric/crypto/signature/ecdsa"
-	schnorr "dumbo_fabric/crypto/signature/schnorr"
-	aggregate "dumbo_fabric/crypto/signature/schnorr_aggregate"
-	"dumbo_fabric/database/leveldb"
-	"dumbo_fabric/network"
-	mvba "dumbo_fabric/order/smvba"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	bls "jumbo/crypto/signature/bls"
+	ec "jumbo/crypto/signature/ecdsa"
+	schnorr "jumbo/crypto/signature/schnorr"
+	aggregate "jumbo/crypto/signature/schnorr_aggregate"
+	"jumbo/database/leveldb"
+	"jumbo/network"
+	mvba "jumbo/order/smvba"
+	pb "jumbo/struct"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -19,23 +19,24 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/golang/protobuf/proto"
-
-	mapset "github.com/deckarep/golang-set"
+	"google.golang.org/protobuf/proto"
 )
 
 const mspid = "SampleOrg"
 
 var sleeptime int
 
-var local bool
+//var local bool
 
 type order_m struct {
 	Order_m        string `yaml:"Order_m"`
@@ -92,10 +93,11 @@ type order_m struct {
 	BatchSize        int    `yaml:"BatchSize"`
 	CrashMVBA        int    `yaml:"CrashMVBA"`
 	ByzFairness      int    `yaml:"ByzFairness"`
+	IsLocal          bool   `yaml:"IsLocal"`
 }
 
 func main() {
-	local = false
+	//local = false
 	var idf = flag.Int("id", 0, "-id")
 	flag.Parse()
 	id := *idf
@@ -103,7 +105,7 @@ func main() {
 	//read node.yaml
 	newOrder_m := &order_m{}
 	gopath := os.Getenv("GOPATH")
-	readBytes, err := ioutil.ReadFile(gopath + "/src/dumbo_fabric/config/node.yaml")
+	readBytes, err := ioutil.ReadFile(gopath + "/src/jumbo/config/node.yaml")
 	if err != nil {
 		panic(err)
 	}
@@ -134,7 +136,7 @@ func main() {
 	for i := 0; i < newOrder_m.Node_num; i++ {
 		newOrder_m.conMsgBuff[i] = make(chan pb.SendMsg, 3000)
 	}
-	
+
 	newOrder_m.heights = make([][]pb.BCBlock, newOrder_m.Node_num)
 	//newOrder_m.cutBlockCH = make(chan cut, 100)
 	newOrder_m.oldBCBlocks.blocks = make([][][]pb.BCBlock, newOrder_m.Node_num)
@@ -143,7 +145,7 @@ func main() {
 	newOrder_m.orderCons = make([]net.Conn, newOrder_m.Node_num)
 	newOrder_m.feedbackCH = make(chan pb.BCBlock, 3000)
 	newOrder_m.help2bcCH = make(chan pb.BCBlock, 3000)
-	newOrder_m.callhelpbuffer = callhelpbuffer{&sync.Mutex{}, make(map[key]mapset.Set[int32], newOrder_m.Node_num)}
+	//newOrder_m.callhelpbuffer = callhelpbuffer{&sync.Mutex{}, make(map[key]mapset.Set[int32], newOrder_m.Node_num)}
 	var lock sync.Mutex
 	newOrder_m.oldBCBlocks.lock = &lock
 	newOrder_m.net = network.New(newOrder_m.IsControlSpeed, newOrder_m.OrderNetSpeed, newOrder_m.IsControlLatency, newOrder_m.OrderNetLatency)
@@ -191,8 +193,8 @@ func main() {
 	if c == io.EOF {
 		panic("missing order_m ip")
 	}
-	if local {
-		ordermIP = string(a) + fmt.Sprintf(":%d", 11000+id)
+	if newOrder_m.IsLocal {
+		ordermIP = fmt.Sprintf("127.0.0.1:%d", 14000+id)
 	} else {
 		ordermIP = string(a)
 	}
@@ -216,10 +218,10 @@ func main() {
 			break
 		}
 
-		if local {
-			ips[i] = string(a) + fmt.Sprintf(":%d", 12000+id)
+		if newOrder_m.IsLocal {
+			ips[i] = fmt.Sprintf("127.0.0.1:%d", 13000+i+1)
 			if i == id-1 {
-				orderip = string(a) + fmt.Sprintf(":%d", 12000+id)
+				orderip = fmt.Sprintf("127.0.0.1:%d", 13000+id)
 			}
 		} else {
 			ips[i] = string(a) + fmt.Sprintf(":%d", 12000)
@@ -291,12 +293,12 @@ func main() {
 
 	//init new order and start it
 
-	newOrder := mvba.NewOrder(id, newOrder_m.Node_num, newOrder_m.K, orderip, ips, newOrder_m.sigmeta, newOrder_m.sendIntputCH, newOrder_m.rcvOutputCH, check_inputs, check_input_RBC, check_inputs_QCagg, newOrder_m.smvbaCH, newOrder_m.protoMsgOut, newOrder_m.UsingDumboMVBA, newOrder_m.dumbomvbaCH, newOrder_m.BroadcastType, newOrder_m.MVBAType, newOrder_m.baCH, newOrder_m.mRBCCH, newOrder_m.hs, newOrder_m.oldBCBlocks.blocks,newOrder_m.ByzFairness)
+	newOrder := mvba.NewOrder(id, newOrder_m.Node_num, newOrder_m.K, orderip, ips, newOrder_m.sigmeta, newOrder_m.sendIntputCH, newOrder_m.rcvOutputCH, check_inputs, check_input_RBC, check_inputs_QCagg, newOrder_m.smvbaCH, newOrder_m.protoMsgOut, newOrder_m.UsingDumboMVBA, newOrder_m.dumbomvbaCH, newOrder_m.BroadcastType, newOrder_m.MVBAType, newOrder_m.baCH, newOrder_m.mRBCCH, newOrder_m.hs, newOrder_m.oldBCBlocks.blocks, newOrder_m.ByzFairness)
 	newOrder.Start()
 
 }
 
-//receive blocks from broadcaster
+// receive blocks from broadcaster
 func (od_m *order_m) handle_rcvBroadcastCH() {
 	if od_m.ID > od_m.Node_num-od_m.CrashMVBA {
 		for {
@@ -347,7 +349,7 @@ func (od_m *order_m) handle_rcvBroadcastCH() {
 }
 
 //check if some other node called help for this bcblock
-func (od_m *order_m) check_callhelpbuff(lid int32, sid int32, height int32, Key []byte, blkbyte []byte) {
+/*func (od_m *order_m) check_callhelpbuff(lid int32, sid int32, height int32, Key []byte, blkbyte []byte) {
 	value, ok := od_m.callhelpbuffer.missblocks[key{lid, sid, height}]
 	if !ok {
 		//no one has called help for this bcblock
@@ -374,9 +376,9 @@ func (od_m *order_m) check_callhelpbuff(lid int32, sid int32, height int32, Key 
 		}
 		od_m.callhelpbuffer.remove(lid, sid, height)
 	}
-}
+}*/
 
-//call when receive a bcblock
+// call when receive a bcblock
 func (od_m *order_m) update_bcBlocks(bcblock pb.BCBlock) {
 	od_m.oldBCBlocks.lock.Lock()
 	defer od_m.oldBCBlocks.lock.Unlock()
@@ -390,7 +392,7 @@ func (od_m *order_m) update_bcBlocks(bcblock pb.BCBlock) {
 	od_m.add_bcBlock(bcblock)
 }
 
-//to be done,caculate timestamp
+// to be done,caculate timestamp
 func (od_m *order_m) add_bcBlock(bcblock pb.BCBlock) {
 	lid := bcblock.RawBC.Leader - 1
 	sid := bcblock.RawBC.K - 1
@@ -454,7 +456,7 @@ func (od_m *order_m) handle_rcvOrderCH() {
 			default:
 				fmt.Println("mRBCCH full")
 				od_m.mRBCCH <- ordermsg.Content
-			}	
+			}
 		//od_m.mRBCCH <- ordermsg.Content
 		default:
 			panic("wrong type order msg")
@@ -546,7 +548,7 @@ func (od_m *order_m) handle_rcvOrderCH() {
 //
 //}
 
-//receive an output from MVBA
+// receive an output from MVBA
 func (od_m *order_m) handle_rcvOutputCH() {
 	var alllatency time.Duration
 	var alllatencyblockcount int
@@ -602,6 +604,9 @@ func (od_m *order_m) handle_rcvOutputCH() {
 			alllatencyblockcount += latencyblockcount
 			tps := float64(allblockcount) / (float64(elapsed) / float64(time.Second))
 			fmt.Println("all tps:", tps)
+			if alllatencyblockcount != 0 && od_m.ID==1{
+				ShowData(tps, alllatency/time.Duration(alllatencyblockcount))
+			}
 		}
 		if alllatencyblockcount != 0 {
 			fmt.Println("all latency:", alllatency/time.Duration(alllatencyblockcount))
@@ -641,7 +646,7 @@ func (od_m *order_m) handle_msgOutCH() {
 	}
 }
 
-//to be done: caculate latency
+// to be done: caculate latency
 func (od_m *order_m) cutBlock(old [][]int, new [][]int, hps pb.HighProofs) (time.Duration, int, int) {
 
 	timeend := time.Now()
@@ -734,7 +739,7 @@ func (od_m *order_m) cutBlock(old [][]int, new [][]int, hps pb.HighProofs) (time
 	blockcount := 0 //caculate how many block have been commit this round
 	latencyblockcount := 0
 	blockbuffercount := 0
-	count:=0
+	count := 0
 	for i := 0; i < od_m.Node_num; i++ {
 		//newblock[i] = make([][]pb.BCBlock, od_m.K)
 		for j := 0; j < od_m.K; j++ {
@@ -799,7 +804,7 @@ func (od_m *order_m) handle_orderCon(id int) {
 	}
 }
 
-//send msg to other orders
+// send msg to other orders
 func (od_m *order_m) handle_conMsg(id int) {
 	//protoMsg := make(chan sendmsg, 1)
 	//recovMsg := make(chan []byte, 3000)
@@ -998,8 +1003,8 @@ func SafeClose(ch chan bool) {
 	close(ch) // panic if ch is closed
 }
 
-//lid sid height id
-func (chb callhelpbuffer) put(x int32, y int32, z int32, v int32) {
+// lid sid height id
+/*func (chb callhelpbuffer) put(x int32, y int32, z int32, v int32) {
 	if value, ok := chb.missblocks[key{x, y, z}]; ok {
 		value.Add(v)
 	} else {
@@ -1009,7 +1014,30 @@ func (chb callhelpbuffer) put(x int32, y int32, z int32, v int32) {
 
 }
 
-//lid sid height
+// lid sid height
 func (chb callhelpbuffer) remove(x int32, y int32, z int32) {
 	delete(chb.missblocks, key{x, y, z})
+}
+*/
+
+func ShowData(throughput float64, latency time.Duration) {
+
+	value1 := throughput
+	value2 := latency.Seconds()
+
+	// 转换为字符串并创建 URL 查询参数
+	values := url.Values{}
+	values.Add("value1", strconv.FormatFloat(value1, 'f', 2, 64))
+	values.Add("value2", strconv.FormatFloat(value2, 'f', 2, 64))
+
+	// 构建请求的 URL
+	serverURL := "http://192.168.1.119:8080/receive?" + values.Encode()
+
+	// 向服务器发送数据
+	resp, err := http.Get(serverURL)
+	if err != nil {
+		panic(err)
+	}
+	resp.Body.Close()
+
 }

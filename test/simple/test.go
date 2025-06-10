@@ -1,16 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
-	max := 256
-	a := []int{128, 8, 32, 2, 255, 33, 66}
 
-	fmt.Println(a)
-	b := ints2bytes(a, max)
-	fmt.Println(b)
-	c := bytes2ints(b, max)
-	fmt.Println(c)
+	t1 := time.Duration(time.Second)
+	t2 := t1 / time.Duration(3)
+	fmt.Println(t2)
+	fmt.Println(t2.Seconds())
 
 }
 

@@ -8,6 +8,6 @@ ips=$(<"$file")
 
 for ip in $ips
 do
-    (scp -i chenghao.pem ubuntu@${ip}:~/golang/src/dumbo_fabric/SimpleHotStuff/log/log.txt $1${id}.txt) &
+    (scp -i chenghao.pem ubuntu@${ip}:~/golang/src/jumbo/SimpleHotStuff/log/log.txt $1${id}.txt) &
     let id++
 done

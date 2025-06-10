@@ -1,10 +1,10 @@
 package binaryagreement
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewBA(num int, id int, mvbaround int, baround int, input bool, secondinput chan bool, outputCH chan bool, msgin chan pb.BAMsg, msgout chan pb.SendMsg) *BA {

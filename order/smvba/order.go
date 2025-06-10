@@ -1,12 +1,12 @@
 package smvba
 
 import (
-	cy "dumbo_fabric/crypto/signature"
-	"dumbo_fabric/order/smvba/dumbomvba"
-	sfm "dumbo_fabric/order/smvba/signaturefreemvba"
-	speedingmvba "dumbo_fabric/order/smvba/speedingmvba"
-	speedingmvbadm "dumbo_fabric/order/smvba/speedingmvbadm"
-	pb "dumbo_fabric/struct"
+	cy "jumbo/crypto/signature"
+	"jumbo/order/smvba/dumbomvba"
+	sfm "jumbo/order/smvba/signaturefreemvba"
+	speedingmvba "jumbo/order/smvba/speedingmvba"
+	speedingmvbadm "jumbo/order/smvba/speedingmvbadm"
+	pb "jumbo/struct"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"

@@ -1,10 +1,9 @@
 package main
 
 import (
-	pb "dumbo_fabric/struct"
+	pb "jumbo/struct"
 	"sync"
-
-	mapset "github.com/deckarep/golang-set"
+	//mapset "github.com/deckarep/golang-set"
 )
 
 type sendmsg struct {
@@ -19,7 +18,7 @@ type cut struct {
 	new [][]int
 }
 
-//channel_status
+// channel_status
 type cs struct {
 	channelID string
 	number    int
@@ -34,7 +33,7 @@ type key struct {
 
 type callhelpbuffer struct {
 	lock       *sync.Mutex
-	missblocks map[key]mapset.Set[int32] //indexs: 1:lid 2:sid 3:height value: id
+	missblocks map[key]int //indexs: 1:lid 2:sid 3:height value: id
 }
 
 type Oldblocks struct {
