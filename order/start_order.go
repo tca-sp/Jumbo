@@ -3,6 +3,12 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"encoding/binary"
+	"flag"
+	"fmt"
+	"io"
+	"io/ioutil"
 	cy "jumbo/crypto/signature"
 	bls "jumbo/crypto/signature/bls"
 	ec "jumbo/crypto/signature/ecdsa"
@@ -12,11 +18,6 @@ import (
 	"jumbo/network"
 	mvba "jumbo/order/smvba"
 	pb "jumbo/struct"
-	"encoding/binary"
-	"flag"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -30,6 +31,10 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"google.golang.org/protobuf/proto"
+
+	kv "jumbo/order/kvstore"
+
+	"google.golang.org/grpc"
 )
 
 const mspid = "SampleOrg"
@@ -94,6 +99,8 @@ type order_m struct {
 	CrashMVBA        int    `yaml:"CrashMVBA"`
 	ByzFairness      int    `yaml:"ByzFairness"`
 	IsLocal          bool   `yaml:"IsLocal"`
+	kv.UnimplementedKeyValueStoreServer
+	DBchan chan []byte
 }
 
 func main() {
@@ -145,6 +152,12 @@ func main() {
 	newOrder_m.orderCons = make([]net.Conn, newOrder_m.Node_num)
 	newOrder_m.feedbackCH = make(chan pb.BCBlock, 3000)
 	newOrder_m.help2bcCH = make(chan pb.BCBlock, 3000)
+
+	//init db channal
+	newOrder_m.DBchan = make(chan []byte, 1000)
+
+	go newOrder_m.StartGrpc()
+
 	//newOrder_m.callhelpbuffer = callhelpbuffer{&sync.Mutex{}, make(map[key]mapset.Set[int32], newOrder_m.Node_num)}
 	var lock sync.Mutex
 	newOrder_m.oldBCBlocks.lock = &lock
@@ -282,6 +295,8 @@ func main() {
 	//go newOrder_m.handle_feedbackCH()
 	go newOrder_m.handle_protomsgOutCH()
 	go newOrder_m.handle_msgOutCH()
+
+	go newOrder_m.handle_db()
 	//go newOrder_m.handle_callhelpCH()
 	//go newOrder_m.handle_helpCH()
 	for i := 0; i < newOrder_m.Node_num; i++ {
@@ -292,6 +307,10 @@ func main() {
 	}
 
 	//init new order and start it
+
+	if id == 1 {
+
+	}
 
 	newOrder := mvba.NewOrder(id, newOrder_m.Node_num, newOrder_m.K, orderip, ips, newOrder_m.sigmeta, newOrder_m.sendIntputCH, newOrder_m.rcvOutputCH, check_inputs, check_input_RBC, check_inputs_QCagg, newOrder_m.smvbaCH, newOrder_m.protoMsgOut, newOrder_m.UsingDumboMVBA, newOrder_m.dumbomvbaCH, newOrder_m.BroadcastType, newOrder_m.MVBAType, newOrder_m.baCH, newOrder_m.mRBCCH, newOrder_m.hs, newOrder_m.oldBCBlocks.blocks, newOrder_m.ByzFairness)
 	newOrder.Start()
@@ -326,7 +345,7 @@ func (od_m *order_m) handle_rcvBroadcastCH() {
 		od_m.update_bcBlocks(blk)
 
 		//od_m.callhelpbuffer.lock.Lock()
-		if !od_m.Testmode {
+		if od_m.ID == 1 {
 			//store block in database
 			key := append(IntToBytes(int(blk.RawBC.Height)), IntToBytes(int(lid))...)
 			key = append(key, IntToBytes(int(sid))...)
@@ -604,8 +623,8 @@ func (od_m *order_m) handle_rcvOutputCH() {
 			alllatencyblockcount += latencyblockcount
 			tps := float64(allblockcount) / (float64(elapsed) / float64(time.Second))
 			fmt.Println("all tps:", tps)
-			if alllatencyblockcount != 0 && od_m.ID==1{
-				ShowData(tps, alllatency/time.Duration(alllatencyblockcount))
+			if alllatencyblockcount != 0 && od_m.ID == 1 {
+				//ShowData(tps, alllatency/time.Duration(alllatencyblockcount))
 			}
 		}
 		if alllatencyblockcount != 0 {
@@ -673,21 +692,7 @@ func (od_m *order_m) cutBlock(old [][]int, new [][]int, hps pb.HighProofs) (time
 			for j := 0; j < od_m.K; j++ {
 				if len(od_m.oldBCBlocks.blocks[i][j]) < differ[i][j] {
 					flag = false
-					/*if !callinghlp {
-						missblock := pb.MissBlock{
-							Lid: int32(i + 1),
-							Sid: int32(j + 1),
-						}
-						k := int32(0)
-						if len(od_m.oldBCBlocks.blocks[i][j]) > 0 {
-							k = od_m.oldBCBlocks.blocks[i][j][len(od_m.oldBCBlocks.blocks[i][j])-1].RawBC.Height + 1
-						}
-						for ; int(k) <= od_m.lastCommit[i][j]; k++ {
-							missblock.MissHeights = append(missblock.MissHeights, k)
-						}
 
-						callhelp.MissBlocks = append(callhelp.MissBlocks, &missblock)
-					}*/
 					if firsttime {
 						fmt.Println(i, "|", j, "|", len(od_m.oldBCBlocks.blocks[i][j]), "|", differ[i][j])
 					}
@@ -744,15 +749,6 @@ func (od_m *order_m) cutBlock(old [][]int, new [][]int, hps pb.HighProofs) (time
 		//newblock[i] = make([][]pb.BCBlock, od_m.K)
 		for j := 0; j < od_m.K; j++ {
 
-			//feedback to client
-			//Q? send back block or txs?
-			//newblock[i][j] = od_m.oldBCBlocks.blocks[i][j][:differ[i][j]]
-			//send block back to client
-			/*if i == 0 {
-				for _, block := range newblock[0][j] {
-					od_m.feedbackCH <- block
-				}
-			}*/
 			for k := 0; k < differ[i][j]; k++ {
 				if i == od_m.ID-1 {
 					timestamp := od_m.oldBCBlocks.blocks[i][j][k].RawBC.Timestamp
@@ -763,12 +759,9 @@ func (od_m *order_m) cutBlock(old [][]int, new [][]int, hps pb.HighProofs) (time
 						latencyblockcount += int(od_m.oldBCBlocks.blocks[i][j][k].RawBC.Txcount)
 					}
 				}
-				//if od_m.BroadcastType == "WRBC" {
-				//	blockcount += od_m.BatchSize
-				//} else {
 				blockcount += int(od_m.oldBCBlocks.blocks[i][j][k].RawBC.Txcount)
-				//}
 				count++
+				od_m.DBchan <- od_m.oldBCBlocks.blocks[i][j][k].Payload
 			}
 			blockbuffercount += len(od_m.oldBCBlocks.blocks[i][j])
 			od_m.oldBCBlocks.blocks[i][j] = od_m.oldBCBlocks.blocks[i][j][differ[i][j]:]
@@ -783,7 +776,38 @@ func (od_m *order_m) cutBlock(old [][]int, new [][]int, hps pb.HighProofs) (time
 	//od_m.ledger = append(od_m.ledger, newblock)
 	fmt.Println("------------extract blocks done, average batch size:", blockcount/count)
 	return timecount, latencyblockcount, blockcount
+}
 
+func (od_m *order_m) handle_db() {
+	for {
+		txPoolBytes := <-od_m.DBchan
+
+		if od_m.ID == 1 {
+			txPoolMsg := pb.TxPool{}
+			err := proto.Unmarshal(txPoolBytes, &txPoolMsg)
+			if err != nil {
+				panic(err)
+			}
+
+			txs := pb.TXs{}
+			err = proto.Unmarshal(txPoolMsg.Payloads, &txs)
+			if err != nil {
+				panic(err)
+			}
+
+			for _, tx := range txs.Txs {
+				kvMsg := pb.RealTX{}
+				err = proto.Unmarshal(tx, &kvMsg)
+				if err != nil {
+					panic(err)
+				}
+
+				od_m.db.Put([]byte(kvMsg.Key), []byte(kvMsg.Value))
+			}
+
+		}
+
+	}
 }
 
 func (od_m *order_m) handle_orderCon(id int) {
@@ -1040,4 +1064,26 @@ func ShowData(throughput float64, latency time.Duration) {
 	}
 	resp.Body.Close()
 
+}
+
+func (od_m *order_m) StartGrpc() {
+	lis, err := net.Listen("tcp", ":40001")
+	if err != nil {
+		panic(err)
+	}
+	s := grpc.NewServer()
+	kv.RegisterKeyValueStoreServer(s, od_m)
+	if err := s.Serve(lis); err != nil {
+		panic(err)
+	}
+}
+
+func (od_m *order_m) Get(ctx context.Context, req *kv.GetRequest) (*kv.GetResponse, error) {
+	key := req.Key
+
+	value, _ := od_m.db.Get([]byte(key))
+	if value == nil {
+		return &kv.GetResponse{Found: false}, nil
+	}
+	return &kv.GetResponse{Value: string(value), Found: true}, nil
 }

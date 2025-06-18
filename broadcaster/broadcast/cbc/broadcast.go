@@ -5,8 +5,6 @@ import (
 	"jumbo/database/leveldb"
 	pb "jumbo/struct"
 	"sync"
-
-	mapset "github.com/deckarep/golang-set"
 )
 
 type SendMsg struct {
@@ -42,39 +40,25 @@ type BC_l struct {
 }
 
 type BC_f struct {
-	nid            int
-	lid            int
-	sid            int
-	num            int
-	threshold      int
-	db             *leveldb.DB
-	sigmeta        cy.Signature
-	callhelp       callhelp       //info of mine callhelp
-	callhelpbuffer callhelpbuffer //buffer callhelp msgs from others
-	futurebuffer   futurebuffer   //buffer legal futureblock
-	output         chan []byte
-	msgIn          chan []byte
-	msgOut         chan SendMsg
-	bcCH           chan pb.BCMsg
-	callhelpCH     chan pb.CallHelp //buffer callhelp msg from others
-	helpCH         chan pb.BCMsg    //buffer help msg from others
-	height         int
-	lastblkID      []byte
-	lastblock      pb.BCBlock
-	signs          [][]byte
-	testmode       bool
-}
-
-type callhelpbuffer struct {
-	lock   *sync.Mutex
-	buffer map[int]mapset.Set[int]
-}
-
-type callhelp struct {
-	iscallhelp bool
-	highest    int //the highest block that has been called help
-	lock       *sync.Mutex
-	missblocks mapset.Set[int]
+	nid          int
+	lid          int
+	sid          int
+	num          int
+	threshold    int
+	db           *leveldb.DB
+	sigmeta      cy.Signature
+	futurebuffer futurebuffer //buffer legal futureblock
+	output       chan []byte
+	msgIn        chan []byte
+	msgOut       chan SendMsg
+	bcCH         chan pb.BCMsg
+	callhelpCH   chan pb.CallHelp //buffer callhelp msg from others
+	helpCH       chan pb.BCMsg    //buffer help msg from others
+	height       int
+	lastblkID    []byte
+	lastblock    pb.BCBlock
+	signs        [][]byte
+	testmode     bool
 }
 
 type futurebuffer struct {

@@ -3,41 +3,36 @@ package broadcast
 import (
 	"bytes"
 	"crypto/sha256"
-	cy "jumbo/crypto/signature"
-	pb "jumbo/struct"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
+	cy "jumbo/crypto/signature"
+	pb "jumbo/struct"
 	"sync"
 
 	"github.com/golang/protobuf/proto"
 
 	"jumbo/database/leveldb"
-
-	mapset "github.com/deckarep/golang-set"
 )
 
 func NewBroadcast_follower(nid int, lid int, sid int, num int, sigmeta cy.Signature, output chan []byte, msgIn chan []byte, msgOut chan SendMsg, db *leveldb.DB, testmode bool) BC_f {
 
 	newBC_f := BC_f{
-		nid:            nid,
-		lid:            lid,
-		sid:            sid,
-		num:            num,
-		threshold:      num * 2 / 3,
-		db:             db,
-		sigmeta:        sigmeta,
-		callhelp:       callhelp{false, -1, &sync.Mutex{}, mapset.NewSet[int]()},
-		callhelpbuffer: callhelpbuffer{&sync.Mutex{}, make(map[int]mapset.Set[int])},
-		futurebuffer:   futurebuffer{-1, &sync.Mutex{}, make([]pb.BCBlock, 0)},
-		output:         output,
-		msgIn:          msgIn,
-		msgOut:         msgOut,
-		bcCH:           make(chan pb.BCMsg, 1000),
-		callhelpCH:     make(chan pb.CallHelp, 1000),
-		helpCH:         make(chan pb.BCMsg, 1000),
-		height:         0,
-		testmode:       testmode,
+		nid:          nid,
+		lid:          lid,
+		sid:          sid,
+		num:          num,
+		threshold:    num * 2 / 3,
+		db:           db,
+		sigmeta:      sigmeta,
+		futurebuffer: futurebuffer{-1, &sync.Mutex{}, make([]pb.BCBlock, 0)},
+		output:       output,
+		msgIn:        msgIn,
+		msgOut:       msgOut,
+		bcCH:         make(chan pb.BCMsg, 1000),
+		callhelpCH:   make(chan pb.CallHelp, 1000),
+		helpCH:       make(chan pb.BCMsg, 1000),
+		height:       0,
+		testmode:     testmode,
 	}
 	return newBC_f
 
@@ -83,12 +78,7 @@ func (bcf *BC_f) handle_msgin() {
 }
 
 func (bcf *BC_f) Start() {
-
 	go bcf.handle_msgin()
-	if !bcf.testmode {
-		go bcf.handle_callhelp()
-	}
-
 	bcf.handle_bcblock()
 }
 
@@ -164,64 +154,12 @@ func (bcf *BC_f) handle_bcblock() {
 			}
 			//callhelp
 
-			if !bcf.testmode {
-				go bcf.sendcallhelp(bcblock)
-			} else {
-				bcf.futurebuffer.put(bcblock)
-			}
+			bcf.futurebuffer.put(bcblock)
 
 		}
 
 	}
 
-}
-
-func (bcf *BC_f) sendcallhelp(block pb.BCBlock) {
-	fmt.Println(bcf.nid, "inside callhelp")
-	//add it to futurebuf
-	bcf.futurebuffer.put(block)
-	//caculate what blocks we should callhelp for
-	begin, end := bcf.callhelp.put(block, bcf.height)
-	if begin == end && begin == 0 {
-		return
-	}
-	//send callhelp msg
-	threshold := bcf.num/3*2 + 1
-	for i := begin; i <= end; i++ {
-		callhelp := pb.CallHelp{
-			Round:  int32(i),
-			ID:     int32(bcf.nid),
-			Leader: int32(bcf.lid),
-			K:      int32(bcf.sid),
-		}
-		callhelpbyte, err := proto.Marshal(&callhelp)
-		if err != nil {
-			panic(err)
-		}
-		msg := pb.BCMsg{
-			Type:    3,
-			Content: callhelpbyte,
-		}
-		msgbyte, err := proto.Marshal(&msg)
-		if err != nil {
-			panic(err)
-		}
-
-		randnum := rand.Int31n(int32(bcf.num)) + 1
-
-		for j := 0; j < threshold; j++ {
-			if ((int(randnum)+j)%bcf.num + 1) == bcf.nid {
-				continue
-			}
-			//fmt.Println(bcf.nid, "send callhelp msg to ", (int(randnum)+j)%bcf.num+1, " of round ", i)
-			bcf.msgOut <- SendMsg{
-				ID:      (int(randnum)+j)%bcf.num + 1,
-				Type:    2,
-				Content: msgbyte,
-			}
-		}
-
-	}
 }
 
 func (bcf *BC_f) checkblockid(block pb.BCBlock) bool {
@@ -477,106 +415,6 @@ func (bcf *BC_f) check_bcblock(block pb.BCBlock) {
 
 }
 
-// handle callhelp msg from others
-func (bcf *BC_f) handle_callhelp() {
-
-	for {
-		callhelpmsg := <-bcf.callhelpCH
-		//check if I can help now
-		if callhelpmsg.Round < int32(bcf.height) {
-			//callhelp for a block in db
-			helpblock, err := bcf.db.Get(IntToBytes(int(callhelpmsg.Round)))
-			if err != nil {
-				panic(err)
-			}
-			helpmsg := pb.BCMsg{
-				Type:    4,
-				Content: helpblock,
-			}
-			helpmsgbyte, err := proto.Marshal(&helpmsg)
-			if err != nil {
-				panic(err)
-			}
-			//check help block
-			checkblock := pb.BCBlock{}
-			err = proto.Unmarshal(helpblock, &checkblock)
-			if err != nil {
-				panic(err)
-			}
-			//fmt.Println(bcf.nid, "send a help msg to", callhelpmsg.ID, "of round ", callhelpmsg.Round, "and real round", checkblock.RawBC.Height)
-			bcf.msgOut <- SendMsg{
-				ID:      int(callhelpmsg.ID),
-				Type:    1,
-				Content: helpmsgbyte,
-				Height:  int(callhelpmsg.Round),
-			}
-		} else {
-			//call for a future block, we can't help it, even it's in futurebuffer, as we can't 100% ensure the security of blocks in futurebuffer
-			//buffer this call help msg, and check it whenever put a block in db
-			//bcf.callhelpbuffer.put(int(callhelpmsg.Round), int(callhelpmsg.ID))
-
-		}
-	}
-}
-
-// check if can help others now
-func (bcf *BC_f) checkcallhelpbuf(height int) {
-	if height > 0 {
-		//check height-1
-		if value, ok := bcf.callhelpbuffer.buffer[height-1]; ok {
-			for id := range value.Iter() {
-				helpblock, err := bcf.db.Get(IntToBytes(height - 1))
-				if err != nil {
-					panic(err)
-				}
-				helpmsg := pb.BCMsg{
-					Type:    4,
-					Content: helpblock,
-				}
-				helpmsgbyte, err := proto.Marshal(&helpmsg)
-				if err != nil {
-					panic(err)
-				}
-				//fmt.Println(bcf.nid, "send a help msg in checkcallhelpbuf 1")
-				bcf.msgOut <- SendMsg{
-					ID:      id,
-					Type:    1,
-					Content: helpmsgbyte,
-					Height:  height - 1,
-				}
-			}
-			//to be done: free old buffer in callhelpbuffer
-			delete(bcf.callhelpbuffer.buffer, height-1)
-		}
-	}
-	//check height
-	if value, ok := bcf.callhelpbuffer.buffer[height]; ok {
-		for id := range value.Iter() {
-			helpblock, err := bcf.db.Get(IntToBytes(height))
-			if err != nil {
-				panic(err)
-			}
-			helpmsg := pb.BCMsg{
-				Type:    4,
-				Content: helpblock,
-			}
-			helpmsgbyte, err := proto.Marshal(&helpmsg)
-			if err != nil {
-				panic(err)
-			}
-			//fmt.Println(bcf.nid, "send a help msg in checkcallhelpbuf 2")
-			bcf.msgOut <- SendMsg{
-				ID:      id,
-				Type:    1,
-				Content: helpmsgbyte,
-				Height:  height,
-			}
-		}
-		delete(bcf.callhelpbuffer.buffer, height)
-	}
-
-}
-
 func SafeClose(ch chan bool) {
 	defer func() {
 		if recover() != nil {
@@ -648,64 +486,4 @@ func (fb *futurebuffer) put(block pb.BCBlock) {
 		}
 	}
 	//fmt.Println("set lowwest to", fb.lowwest)
-}
-
-// incoming a future bcblock, check if need to send new callhelp msg
-// to be done: update highest
-func (ch *callhelp) put(block pb.BCBlock, myheight int) (int, int) {
-	ch.lock.Lock()
-	//fmt.Println("caculate which block to callhelp ", block.RawBC.Height, myheight, ch.highest)
-	defer ch.lock.Unlock()
-
-	if int(block.RawBC.Height) > ch.highest {
-		//need to send new callhelp msg
-		/*for i := ch.highest + 1; i < int(block.RawBC.Height); i++ {
-			ch.missblocks.Add(i)
-		}*/
-		if ch.highest+1 == int(block.RawBC.Height) {
-			ch.highest = int(block.RawBC.Height)
-			return 0, 0
-		} else {
-			var tmp int
-			if ch.highest > myheight {
-				tmp = ch.highest
-			} else {
-				tmp = myheight
-			}
-
-			ch.highest = int(block.RawBC.Height)
-			return tmp, int(block.RawBC.Height) - 1
-		}
-
-	} else {
-		/*if ch.missblocks.Contains(int(block.RawBC.Height)) {
-			//remove this index
-			ch.missblocks.Remove(int(block.RawBC.Height))
-
-		}*/
-		return 0, 0
-	}
-
-}
-
-// after receive a legal bcblock or help msg, remove it from missblocks
-func (ch *callhelp) remove(block pb.BCBlock) {
-	ch.lock.Lock()
-	defer ch.lock.Unlock()
-	if ch.missblocks.Contains(int(block.RawBC.Height)) {
-		ch.missblocks.Remove(int(block.RawBC.Height))
-	}
-}
-
-func (chb *callhelpbuffer) put(key int, subvalue int) {
-	chb.lock.Lock()
-	defer chb.lock.Unlock()
-	if value, ok := chb.buffer[key]; ok {
-		//already buffer same round callhelp
-		value.Add(subvalue)
-	} else {
-		chb.buffer[key] = mapset.NewSet[int]()
-		chb.buffer[key].Add(subvalue)
-	}
-
 }

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "./";
+
+package kvstore;
+
+service KeyValueStore {
+  rpc Get (GetRequest) returns (GetResponse) {}
+}
+
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  string value = 1;
+  bool found = 2;
+}

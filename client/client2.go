@@ -2,20 +2,27 @@ package main
 
 import (
 	"bufio"
-	"jumbo/network"
+	"context"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"jumbo/network"
 	"log"
 	"net"
 	"os"
 	"time"
 
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 	"gopkg.in/yaml.v2"
+
+	pb "jumbo/client/kvstore"
+	st "jumbo/struct"
 )
 
 type client struct {
+	ID        int
 	BatchSize int    `yaml:"BatchSize"`
 	TxSize    int    `yaml:"TxSize"`
 	TpIPPath  string `yaml:"TpIPPath"`
@@ -26,13 +33,15 @@ type client struct {
 	K              int `yaml:"K"`
 	cons           []net.Conn
 	con            net.Conn
-	feedbackCH     chan []byte
 	IsControlSpeed bool `yaml:"IsControlSpeed"`
 	ClientNetSpeed int  `yaml:"ClientNetSpeed"`
 	Sleeptime      int  `yaml:"Sleeptime"`
 
 	PRECISION int  `yaml:"PRECISION"`
 	IsLocal   bool `yaml:"IsLocal"`
+	IsRealTx  bool `yaml:"IsRealTx"`
+	pb.UnimplementedKeyValueStoreServer
+	RealTxChan chan []byte
 }
 
 var configpath string = "/src/jumbo/config/node.yaml"
@@ -67,38 +76,16 @@ func main() {
 	}
 	net := network.New(client.IsControlSpeed, client.ClientNetSpeed, false, 0)
 	net.Init()
-	time.Sleep(time.Duration(client.Sleeptime+10) * time.Second)
-	//go func() {
-	//time.Sleep(time.Duration(10) * time.Second)
+	time.Sleep(time.Duration(client.Sleeptime+5) * time.Second)
 
-	/*timebeign := time.Now()
-	amountnow := 0
-	txcount := 0
-	fmt.Println("start time:", time.Now())
-	for {
-		net.Send(client.con, msg)
-		txcount++
-		if txcount%10000 == 0 {
-			fmt.Println("sent", txcount, "to txpool", time.Now())
-		}
-		elapsed := time.Since(timebeign)
-		if elapsed >= time.Millisecond*time.Duration(client.PRECISION) {
-			amountnow = 0
-			timebeign = time.Now()
-		} else {
-			amountnow++
-			if amountnow >= max/(1000/client.PRECISION) {
-				amountnow = 0
-				time.Sleep(time.Millisecond*time.Duration(client.PRECISION) - elapsed)
-				timebeign = time.Now()
-			}
-		}
-	}*/
 	amountnow := 0
 	var ticker time.Ticker
 	firsttime := true
 	for {
-		net.Send(client.con, msg)
+
+		realTx := <-client.RealTxChan
+		net.Send(client.con, realTx)
+
 		if firsttime {
 
 			fmt.Println(time.Now())
@@ -118,18 +105,10 @@ func main() {
 
 	}
 
-	//}()
-
-	//go client.handle_feedback(id)
-	//network.Listen_msg(client.ClientIP, client.feedbackCH, true)
-
-	/*for i := 0; i < client.Node_num; i++ {
-		client.cons[i].Close()
-	}*/
-
 }
 
 func (client *client) init(id int) {
+	client.ID = id
 	//init log
 	filepath := fmt.Sprintf("./log/log_client_%d.txt", id)
 
@@ -156,11 +135,13 @@ func (client *client) init(id int) {
 	//read tx_pool IP, dial and send txs to it
 	var tpIP string
 
+	client.RealTxChan = make(chan []byte, 1000)
+	go client.StartGrpc()
+
 	if client.IsLocal {
 		tpIP = fmt.Sprintf("127.0.0.1:%d", 11000+id)
 	} else {
 		TpIPPath := fmt.Sprintf("%s%sip.txt", gopath, client.TpIPPath)
-		//TpIPPath := fmt.Sprintf("%s%sipm.txt", gopath, client.BCIPPath)
 		fi, err := os.Open(TpIPPath)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err)
@@ -178,30 +159,6 @@ func (client *client) init(id int) {
 		fi.Close()
 	}
 
-	//read client IP, using to receive payback from order
-	/*ClientIPPath := fmt.Sprintf("%s%sip.txt", gopath, client.ClientIPPath)
-	fi, err = os.Open(ClientIPPath)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		return
-	}
-
-	br = bufio.NewReader(fi)
-	var clientIP string
-	for i := 0; i < client.Node_num; i++ {
-		a, _, c := br.ReadLine()
-		if c == io.EOF {
-			break
-		}
-		if i == id-1 {
-			clientIP = string(a)
-		}
-
-	}
-	fi.Close()
-	client.ClientIP = clientIP*/
-	//listen payback msg from order
-
 	//dial tx_pool
 	con, err := network.Dial(tpIP)
 	fmt.Println("dial:", tpIP)
@@ -210,20 +167,31 @@ func (client *client) init(id int) {
 	}
 	client.con = con
 
-	client.feedbackCH = make(chan []byte, 1000)
 }
 
-func (client *client) handle_feedback(id int) {
-
-	flag := (id == 1)
-	count := 0
-	for {
-		<-client.feedbackCH
-		count++
-		if flag {
-			log1.Println("receive: ", count)
-		}
-
+func (client *client) StartGrpc() {
+	port := fmt.Sprintf(":5000%d", client.ID)
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
 	}
+	s := grpc.NewServer()
+	pb.RegisterKeyValueStoreServer(s, client)
+	log.Printf("server listening at %v", lis.Addr())
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
 
+func (client *client) Put(ctx context.Context, req *pb.PutRequest) (*pb.PutResponse, error) {
+	key := req.Key
+	val := req.Value
+
+	realTx := st.RealTX{Key: key, Value: val}
+	TxBytes, err := proto.Marshal(&realTx)
+	if err != nil {
+		panic(err)
+	}
+	client.RealTxChan <- TxBytes
+	return &pb.PutResponse{Success: true}, nil
 }

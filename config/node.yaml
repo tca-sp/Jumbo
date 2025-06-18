@@ -1,9 +1,3 @@
-Tx_pool: 127.0.0.1:1000
-Tx_poolm: 127.0.0.1:2000
-Order:  127.0.0.1:3000
-Order_m:  127.0.0.1:4000
-BC_l: 127.0.0.1:5000
-BC_l_m: 127.0.0.1:7000
 Node_num: 4
 SkPath : /src/jumbo/config/
 PkPath : /src/jumbo/config/
@@ -49,3 +43,4 @@ CrashMVBA: 0
 # k for 1/k quality, if k=0, do nothing
 ByzFairness: 0
 IsLocal : true
+IsRealTx : true
