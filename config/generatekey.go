@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bls-go-binary/bls"
+	"github.com/herumi/bls-go-binary/bls"
 )
 
 const max_num = 500

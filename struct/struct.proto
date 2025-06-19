@@ -6,6 +6,11 @@ message TX{
     bytes Payload=1;
 }
 
+message RealTX{
+    string Key=1;
+    string Value=2;
+}
+
 message TXs{
     //int64 Timestamp=1;
     repeated bytes Txs=2;
